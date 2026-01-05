@@ -54,7 +54,7 @@ def integration_test():
 
     # 4. Shred (A1 Node / Distributor) Başlatılıyor
     print(f"\n[ADIM 2] Shred (Gönderici) başlatılıyor...")
-    shredder = Shred(payload=TEST_PAYLOAD, password=TEST_PASSWORD)
+    shredder = Shred(payload=TEST_PAYLOAD, password=TEST_PASSWORD, assemblers=[])
     
     # 5. Public Key Transferi Simülasyonu
     # Shred sınıfı diskteki public key'i okur (B1 -> A1 transferi simülasyonu)
@@ -62,7 +62,7 @@ def integration_test():
     
     # 6. Şifreleme (Encryption)
     print(f"[ADIM 3] Veri şifreleniyor...")
-    encrypted_data = shredder.encrypt()
+    encrypted_data = shredder.encrypt(TEST_PAYLOAD)
     
     if not encrypted_data:
         print("[HATA] Şifreleme başarısız oldu.")
