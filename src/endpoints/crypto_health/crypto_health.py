@@ -1,9 +1,9 @@
 import os
 import shutil
 from flask import Flask, jsonify
-# Kendi sınıf yollarını kontrol etmeyi unutma
 from src.core.assemble import Assemble
 from src.core.shred import Shred
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -45,7 +45,7 @@ def check_health():
             "status": "success",
             "integration_test": "PASSED",
             "message": f"{message}",
-            "timestamp": "Aktif" # İstersen buraya datetime ekleyebilirsin
+            "timestamp": datetime.utcnow().isoformat() + "Z"
         }), 200
     else:
         return jsonify({

@@ -1,4 +1,5 @@
 import os
+import socket
 from dotenv import load_dotenv
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
@@ -65,11 +66,38 @@ class Assemble:
         try:
             with open(f"keys/{self.__key_name}_public.pem", "rb") as f:
                 public_key_data = f.read()
+
+            #TODO: socket logic will be here to send the public key to Distributor1 Node using k8s service.
             return public_key_data
         except Exception as e:
             print(f"Hata: Genel anahtar yüklenemedi. {e}")
             return None
 
+    
+    def receive_encrypted_data_parts(self, encrypted_parts: list[bytes], password: str):
+        # Different parts received from different distributors will be merged here.
+        pass
+
+    def decrypted_data(self, encrypted_data: bytes, password: str):
+        private_key = self.__load_private_key(password)
+        if not private_key:
+            print("Hata: Özel anahtar yüklenemedi, şifre yanlış olabilir.")
+            return None
+
+        try:
+            decrypted_data = private_key.decrypt(
+                encrypted_data,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            return decrypted_data
+            
+        except Exception as e:
+            print(f"Hata: Veri çözülemedi. {e}")
+            return None
 
 if __name__ == "__main__":
     load_dotenv()
