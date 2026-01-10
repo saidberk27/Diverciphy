@@ -5,8 +5,8 @@ from src.utils.write_file import write_file
 from src.utils.auth import Auth
 
 app = Flask(__name__) #TODO: Create global architecture for app object.
-@app.route('/recieve_shred', methods=['POST'])
-@Auth.login_required
+
+#@Auth.login_required
 def recieve_shred():
     try:
         data = request.get_json(silent=True)

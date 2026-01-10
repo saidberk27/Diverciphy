@@ -1,9 +1,14 @@
+from dotenv import load_dotenv
+import os
+
 class MasterShredEndpoint:
     def __init__(self):
-        pass
-    
+        load_dotenv()
+        self.workers = list()
+
     def initialize_workers(self):
         pass
+        #Kubernetes worker nodes initialization logic will be added here.
         
     def check_worker_health(self):
         pass

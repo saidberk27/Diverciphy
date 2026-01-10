@@ -4,7 +4,7 @@ certifi==2026.1.4
 cffi==2.0.0
 charset-normalizer==3.4.4
 click==8.3.1
-cryptography==46.0.3
+cryptography==46.0.3s
 -e git+https://github.com/saidberk27/Diverciphy.git@b6a6fa7df7a1bea3003ecab9094347c178f9efc8#egg=diverciphy
 dotenv==0.9.9
 Flask==3.1.2
@@ -22,5 +22,4 @@ tomli==2.3.0
 typing_extensions==4.15.0
 urllib3==2.6.3
 Werkzeug==3.1.5
-
 PyJWT==2.10.1

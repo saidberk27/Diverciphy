@@ -4,7 +4,7 @@ from src.utils.read_file import read_file
 
 app = Flask(__name__) #TODO: Create global architecture for app object.
 
-@app.route('/send_public_key', methods=['GET', 'POST'])
+
 def send_public_key():
     public_key = read_file('../../keys/generated_keys/generated_public.pem')
     

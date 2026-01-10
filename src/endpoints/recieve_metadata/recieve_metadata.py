@@ -4,14 +4,14 @@ from src.utils.write_file import write_file
 app = Flask(__name__) #TODO: Create global architecture for app object.
 
 
-def recieve_public_key():
+def recieve_metadata():
     data = request.get_json(silent=True)
 
-    print(f"Public Key Recieved: {data['public_key']}")
+    print(f"Metadata Recieved: {data['metadata']}")
 
     if not data:
         return jsonify({"hata": "JSON gövdesi boş veya hatalı!"}), 400
-    write_file(file_path = '../../keys/recieved_keys/recieved_key.pem', data = data['public_key'])
+    write_file(file_path = '../../metadata/recieved_metadata/recieved_metadata.json', data = data['metadata'])
     return jsonify({"durum": "basarili"}), 200
 
 if __name__ == '__main__':

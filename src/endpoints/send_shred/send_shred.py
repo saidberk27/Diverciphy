@@ -9,18 +9,18 @@ import requests
 
 app = Flask(__name__) #TODO: Create global architecture for app object.
 
-@app.route('/send_shred', methods=['GET', 'POST'])
-@Auth.login_required
+# @Auth.login_required
 def send_shred():
     load_dotenv()
     machine_type = os.getenv("MACHINE_TYPE", "")
 
     if machine_type == "MASTER":
-        shred = read_file('../../shreds/generated_shreds/generated_shred.pem')
+        shred_path = 'src/shreds/generated_shreds/generated_shred.pem'
 
     elif machine_type == "WORKER":
-        shred = get_latest_file('../../shreds/recieved_shreds/', file_extension='shred_*.pem')
-
+        shred_path = get_latest_file('src/shreds/recieved_shreds', file_extension='*.pem')
+        shred = read_file(shred_path)
+        worker_index = os.getenv("WORKER_INDEX", "0") 
     else:
         return jsonify({"error": "MACHINE_TYPE is not set properly."}), 500
    
@@ -40,18 +40,22 @@ def send_shred():
             return jsonify({"error": "Missing 'address' key in JSON body!"}), 400
 
         try:
-            # Generate Token
             auth = Auth()
             token = auth.generate_token(identity="SourceNode")
-            headers = {"Authorization": f"Bearer {token}"}
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Distributor-Index": str(worker_index) 
+            }
 
-            response = requests.post(target_address, json={"shred": shred, "timestamp": timestamp}, headers=headers, timeout=5)
+            payload = {"shred": shred, "timestamp": timestamp}
+            
+            response = requests.post(target_address, json=payload, headers=headers, timeout=5)
             
             return jsonify({
-                "status": "success",
-                "address": target_address,
-                "timestamp": timestamp,
-                "remote_response": response.json()
+                "status": "sent",
+                "index_sent": worker_index,
+                "remote_response": response.json() if response.status_code == 200 else "Error"
             }), response.status_code
 
         except requests.exceptions.RequestException as e:
