@@ -3,25 +3,26 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from src.utils.read_file import read_file
 from src.utils.get_latest_file_from_dir import get_latest_file 
+from src.utils.auth import Auth
 from dotenv import load_dotenv
 import requests
 
 app = Flask(__name__) #TODO: Create global architecture for app object.
 
 @app.route('/send_shred', methods=['GET', 'POST'])
+@Auth.login_required
 def send_shred():
     load_dotenv()
     machine_type = os.getenv("MACHINE_TYPE", "")
 
-    match machine_type:
-        case "MASTER":
-            shred = read_file('../../shreds/generated_shreds/generated_shred.pem')
+    if machine_type == "MASTER":
+        shred = read_file('../../shreds/generated_shreds/generated_shred.pem')
 
-        case "WORKER":
-            shred = get_latest_file('../../shreds/recieved_shreds/', file_extension='shred_*.pem')
+    elif machine_type == "WORKER":
+        shred = get_latest_file('../../shreds/recieved_shreds/', file_extension='shred_*.pem')
 
-        case _:
-            return jsonify({"error": "MACHINE_TYPE is not set properly."}), 500
+    else:
+        return jsonify({"error": "MACHINE_TYPE is not set properly."}), 500
    
     if not shred:
         return jsonify({"error": "shred could not be read!"}), 500
@@ -39,7 +40,12 @@ def send_shred():
             return jsonify({"error": "Missing 'address' key in JSON body!"}), 400
 
         try:
-            response = requests.post(target_address, json={"shred": shred, "timestamp": timestamp}, timeout=5)
+            # Generate Token
+            auth = Auth()
+            token = auth.generate_token(identity="SourceNode")
+            headers = {"Authorization": f"Bearer {token}"}
+
+            response = requests.post(target_address, json={"shred": shred, "timestamp": timestamp}, headers=headers, timeout=5)
             
             return jsonify({
                 "status": "success",

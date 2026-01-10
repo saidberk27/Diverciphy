@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from src.utils.clear_memory import clear_memory
 from src.utils.timestamp_consistency_checker import is_timestamp_consistent
 import requests
+from src.utils.auth import Auth
 
 class Assemble:
     def __init__(self, components):
@@ -91,11 +92,17 @@ class Assemble:
 
         encrypted_parts = {}
         timestamp_average = 0
+        
+        # Generate Token
+        auth = Auth()
+        token = auth.generate_token(identity="AssemblerNode")
+        headers = {"Authorization": f"Bearer {token}"}
+
         #TODO: Make here more ACID compliant by adding retries and timeouts.
         for addr in eval(distributors):
             addr_final = f"{addr}/last"
             try:
-                response = requests.get(addr_final)
+                response = requests.get(addr_final, headers=headers)
                 if response.status_code == 200:
                     encrypted_part = response.content
                     distributor_index = response.headers.get("Distributor-Index", "Unknown")
