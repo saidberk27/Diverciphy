@@ -26,7 +26,7 @@ def read_public_key_from_file(file_path: str):
 
 @app.route('/send_public_key', methods=['GET'])
 def send_public_key():
-    public_key = read_public_key_from_file('../keys/generated_keys/generated_public_key.pem')
+    public_key = read_public_key_from_file('../../keys/generated_keys/generated_public.pem')
     if not public_key:
         return jsonify({"hata": "Public key okunamadı!"}), 500
     return jsonify({"public_key": public_key}), 200

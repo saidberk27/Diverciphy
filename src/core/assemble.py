@@ -10,8 +10,8 @@ import requests
 class Assemble:
     def __init__(self, components):
         self.components = components
-        self.__key_name = "assemble_key"
-        self.key_path = f"../keys/generated_keys/{self.__key_name}"
+        self.__key_name = "generated"
+        self.key_path = f"../../keys/generated_keys/{self.__key_name}"
         os.makedirs(os.path.dirname(self.key_path), exist_ok=True)
 
     @clear_memory
