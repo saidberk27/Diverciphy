@@ -10,3 +10,10 @@ dependencies = [
     "cryptography",
     "python-dotenv"
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools]
+package-dir = {"" = "."}
