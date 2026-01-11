@@ -1,16 +1,15 @@
 from dotenv import load_dotenv
 import os
-from src.core.assemble import Assemble
 
-def read_file(file_path: str):
+def read_file(file_path: str) -> bytes:
     try:
-        load_dotenv()
-        assembler = Assemble(components=[])
-        assembler.generate_and_save_keys(password=os.environ.get("FILE_PASSWORD"), file_path=file_path)
-        
+        if not os.path.exists(file_path):
+             print(f"File not found: {file_path}")
+             return None
+
         with open(file_path, 'rb') as f:
-            return f.read().decode('utf-8')
+            return f.read()
 
     except Exception as e:
-        print(f"Error reading public key from file: {e}")
+        print(f"Error reading file: {e}")
         return None

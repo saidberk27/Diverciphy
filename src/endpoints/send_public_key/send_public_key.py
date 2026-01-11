@@ -7,7 +7,6 @@ app = Flask(__name__) #TODO: Create global architecture for app object.
 
 def send_public_key():
     public_key = read_file('../../keys/generated_keys/generated_public.pem')
-    
     if not public_key:
         return jsonify({"error": "Public key could not be read!"}), 500
 

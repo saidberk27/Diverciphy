@@ -1,4 +1,5 @@
 import os
+import base64 
 from datetime import datetime
 from flask import Flask, request, jsonify
 from src.utils.read_file import read_file
@@ -7,30 +8,40 @@ from src.utils.auth import Auth
 from dotenv import load_dotenv
 import requests
 
-app = Flask(__name__) #TODO: Create global architecture for app object.
+app = Flask(__name__)
 
 # @Auth.login_required
 def send_shred():
     load_dotenv()
     machine_type = os.getenv("MACHINE_TYPE", "")
+    
+    shred_bytes = None 
+    
 
     if machine_type == "MASTER":
         shred_path = 'src/shreds/generated_shreds/generated_shred.pem'
-
+        shred_bytes = read_file(shred_path)
+        print(shred_bytes)
+        
     elif machine_type == "WORKER":
         shred_path = get_latest_file('src/shreds/recieved_shreds', file_extension='*.pem')
-        shred = read_file(shred_path)
+        shred_bytes = read_file(shred_path)
         worker_index = os.getenv("WORKER_INDEX", "0") 
     else:
+        print(e)
         return jsonify({"error": "MACHINE_TYPE is not set properly."}), 500
    
-    if not shred:
+    if not shred_bytes:
+        print("Shred could not be read")
         return jsonify({"error": "shred could not be read!"}), 500
+
+    shred_str = base64.b64encode(shred_bytes).decode('utf-8')
 
     timestamp = datetime.utcnow().isoformat()
 
     if request.method == 'GET':
-        return jsonify({"shred": shred, "timestamp": timestamp}), 200
+        # Artık shred_str gönderiyoruz
+        return jsonify({"shred": shred_str, "timestamp": timestamp}), 200
 
     if request.method == 'POST':
         data = request.get_json()
@@ -42,24 +53,23 @@ def send_shred():
         try:
             auth = Auth()
             token = auth.generate_token(identity="SourceNode")
-            
+            current_index = os.getenv("WORKER_INDEX", "0") 
+
             headers = {
                 "Authorization": f"Bearer {token}",
-                "Distributor-Index": str(worker_index) 
+                "Distributor-Index": str(current_index) 
             }
 
-            payload = {"shred": shred, "timestamp": timestamp}
+            payload = {"shred": shred_str, "timestamp": timestamp}
             
             response = requests.post(target_address, json=payload, headers=headers, timeout=5)
             
             return jsonify({
                 "status": "sent",
-                "index_sent": worker_index,
+                "index_sent": current_index,
                 "remote_response": response.json() if response.status_code == 200 else "Error"
             }), response.status_code
 
         except requests.exceptions.RequestException as e:
+            print(e)
             return jsonify({"error": f"Failed to send request: {str(e)}"}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5002)

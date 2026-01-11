@@ -1,13 +1,13 @@
 import os
 
-def write_file(file_path: str, data: str, timestamp: str = None, set_secure: bool = False):
+def write_file(file_path: str, data: bytes, set_secure: bool = False):
+    """
+    Veriyi diske saf binary olarak yazar. Timestamp eklemesi YAPMAZ.
+    """
     try:
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        
-        content = f'"{timestamp}","{data}"' if timestamp else data
-        
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(content)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)        
+        with open(file_path, 'w') as f:
+            f.write(data)
         
         if set_secure:
             os.chmod(file_path, 0o600)

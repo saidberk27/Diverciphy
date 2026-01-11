@@ -2,17 +2,18 @@ import os
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 from src.utils.clear_memory import clear_memory
+import base64
 
 class Assemble:
     def __init__(self, components=None):
         self.components = components or []
         self.__key_name = "generated"
-        # Path to save keys
+        # Path where keys are stored
         self.key_path = os.path.join(os.getcwd(), "keys", "generated_keys", self.__key_name)
         os.makedirs(os.path.dirname(self.key_path), exist_ok=True)
 
     @clear_memory
-    def generate_and_save_keys(self, password: str, file_path: os.path.join(os.getcwd(), "keys", "generated_keys", "generated")):
+    def generate_and_save_keys(self, password: str):
         """Generates RSA Key pair and saves them to disk."""
         private_key = rsa.generate_private_key(
             public_exponent=65537,
@@ -41,6 +42,23 @@ class Assemble:
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
             ))
 
+    def get_public_key_bytes(self):
+        """
+        Reads the public key file from disk and returns its bytes.
+        Used by the API to distribute the key.
+        """
+        pub_path = f"{self.key_path}_public.pem"
+        try:
+            if not os.path.exists(pub_path):
+                print(f"[Core Error] Public key file not found: {pub_path}")
+                return None
+            
+            with open(pub_path, "rb") as f:
+                return f.read()
+        except Exception as e:
+            print(f"[Core Error] Could not read public key: {e}")
+            return None
+
     @clear_memory
     def __load_private_key(self, password: str):
         """Loads the private key from disk."""
@@ -68,12 +86,14 @@ class Assemble:
     def decrypt_data(self, encrypted_data: bytes, password: str):
         """Decrypts the provided encrypted byte data."""
         private_key = self.__load_private_key(password)
+        original_encrypted_data = base64.b64decode(encrypted_data)
+        print(f"Veri Uzunluğu: {len(original_encrypted_data)}")
         if not private_key:
             return None
 
         try:
             decrypted_data = private_key.decrypt(
-                encrypted_data,
+                original_encrypted_data,
                 padding.OAEP(
                     mgf=padding.MGF1(algorithm=hashes.SHA256()),
                     algorithm=hashes.SHA256(),
