@@ -24,9 +24,15 @@ def send_shred():
         print(shred_bytes)
         
     elif machine_type == "WORKER":
-        shred_path = get_latest_file('src/shreds/recieved_shreds', file_extension='*.pem')
+        worker_index = int(os.getenv("WORKER_INDEX", "0"))             
+        base_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
+            
+        shred_filename = f'shred_{worker_index + 1}.pem'
+        shred_path = os.path.join(base_path, 'src', 'shreds', 'recieved_shreds', shred_filename)            
+        print(f"[DEBUG] Reading shred from: {shred_path}")
+            
         shred_bytes = read_file(shred_path)
-        worker_index = os.getenv("WORKER_INDEX", "0") 
+
     else:
         print(e)
         return jsonify({"error": "MACHINE_TYPE is not set properly."}), 500
@@ -40,7 +46,6 @@ def send_shred():
     timestamp = datetime.utcnow().isoformat()
 
     if request.method == 'GET':
-        # Artık shred_str gönderiyoruz
         return jsonify({"shred": shred_str, "timestamp": timestamp}), 200
 
     if request.method == 'POST':

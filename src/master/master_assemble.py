@@ -103,25 +103,28 @@ class MasterAssembleEndpoint:
 
     def assemble_shreds_handler(self):
         metadata = self.get_metadata()
+        print(metadata)
         collected_shreds = self.collect_received_shreds_internal()
-        
+        print(collected_shreds)
         if len(collected_shreds) < len(metadata):
             return jsonify({
                 "status": "fail", 
                 "message": f"Missing parts. Expected: {len(metadata)}, Received: {len(collected_shreds)}"
             }), 400
 
-        assembled_data = b""
+        parts_list = [] 
         timestamps = []
-
         try:
             for part_index in metadata:
                 if part_index not in collected_shreds:
                      return jsonify({"status": "fail", "message": f"Index {part_index} missing."}), 400
+                
                 data_part, ts = collected_shreds[part_index]
-                print(data_part)
-                assembled_data += data_part
+                parts_list.append(base64.b64decode(data_part)) # Listeye ekle
                 timestamps.append(ts)
+
+            # Tüm listeyi tek seferde birleştir (Daha hızlıdır)
+            assembled_data = b"".join(parts_list)
             
             if not is_timestamp_consistent(timestamps):
                 return jsonify({"status": "acid_fail", "message": "Timestamps inconsistent!"}), 409
@@ -133,6 +136,7 @@ class MasterAssembleEndpoint:
             return jsonify({"status": "error", "message": str(e)}), 500
 
     def decrypt_data_handler(self):
+        print(self.last_assembled_data)
         if self.last_assembled_data is None:
             return jsonify({"status": "fail", "message": "Run assemble first."}), 400
         decrypted = self.assembler.decrypt_data(self.last_assembled_data, self.file_password)
@@ -163,8 +167,11 @@ class MasterAssembleEndpoint:
         return self.decrypt_data_handler()
 
     def generate_keys_handler(self):
+        
         try:
             self.assembler.generate_and_save_keys(self.file_password)
+            print("b")
+
             return jsonify({"status": "success", "message": "New keys generated."}), 200
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500

@@ -1,0 +1,7 @@
+#Worker Configurations
+MACHINE_TYPE = "WORKER"
+CLUSTER_TYPE = "SHREDDER"
+FILE_PASSWORD = "Diverciphy2024!"
+MASTER_ADDRESS = "https://master_address:7000"
+ASSEMBLER_ADRESS = "https://shredder_address:8003"
+WORKER_INDEX = 3

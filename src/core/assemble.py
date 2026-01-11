@@ -20,9 +20,10 @@ class Assemble:
             key_size=2048,
         )
         encryption = serialization.BestAvailableEncryption(password.encode())
-
+        file_path = f"{self.key_path}_private.pem"
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)      
         # Save Private Key
-        with open(f"{self.key_path}_private.pem", "wb") as f:
+        with open(file_path, "wb") as f:
             f.write(private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
@@ -64,6 +65,7 @@ class Assemble:
         """Loads the private key from disk."""
         try:
             priv_path = f"{self.key_path}_private.pem"
+            print(priv_path)
             if not os.path.exists(priv_path):
                 print(f"[Core Error] Private key not found at: {priv_path}")
                 return None
@@ -86,20 +88,20 @@ class Assemble:
     def decrypt_data(self, encrypted_data: bytes, password: str):
         """Decrypts the provided encrypted byte data."""
         private_key = self.__load_private_key(password)
-        original_encrypted_data = base64.b64decode(encrypted_data)
-        print(f"Veri Uzunluğu: {len(original_encrypted_data)}")
+        print(f"Veri Uzunluğu: {len(encrypted_data)}")
         if not private_key:
             return None
 
         try:
             decrypted_data = private_key.decrypt(
-                original_encrypted_data,
+                encrypted_data,
                 padding.OAEP(
                     mgf=padding.MGF1(algorithm=hashes.SHA256()),
                     algorithm=hashes.SHA256(),
                     label=None
                 )
             )
+            print(f"Şifre Çözüldü: {decrypted_data}")
             return decrypted_data
         except Exception as e:
             print(f"[Core Error] Decryption failed: {e}")

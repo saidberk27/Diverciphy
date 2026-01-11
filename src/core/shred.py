@@ -71,7 +71,7 @@ class Shred:
                 start = end
             parts_with_index.append((i, part))
 
-        random.shuffle(parts_with_index)
+        #random.shuffle(parts_with_index)
 
         shreds_map = {} 
         indices = []
