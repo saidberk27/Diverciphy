@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: master-shredder
+spec:
+  replicas: 1 # Master acts as a singleton coordinator
+  selector:
+    matchLabels:
+      app: master-shredder
+  template:
+    metadata:
+      labels:
+        app: master-shredder
+    spec:
+      containers:
+        - name: shredder
+          image: diverciphy:latest # Replace with actual registry image
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ROLE
+              value: "MASTER_SHREDDER"
+            - name: PORT
+              value: "5555"
+            - name: JWT_EXPIRATION_DELTA
+              value: "3600"
+          envFrom:
+            - configMapRef:
+                name: diverciphy-config
+            - secretRef:
+                name: diverciphy-secret
+          ports:
+            - containerPort: 5555
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5555
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: master-assembler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: master-assembler
+  template:
+    metadata:
+      labels:
+        app: master-assembler
+    spec:
+      containers:
+        - name: assembler
+          image: diverciphy:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ROLE
+              value: "MASTER_ASSEMBLER"
+            - name: PORT
+              value: "5556"
+          envFrom:
+            - configMapRef:
+                name: diverciphy-config
+            - secretRef:
+                name: diverciphy-secret
+          ports:
+            - containerPort: 5556
+          readinessProbe: # Assembler might take time to load large keys
+            httpGet:
+              path: /health
+              port: 5556
+            initialDelaySeconds: 5

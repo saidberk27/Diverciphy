@@ -1,0 +1,10 @@
+__pycache__
+*.pyc
+.env
+.worker_env*
+logs
+data/
+venv/
+.git/
+.gitignore
+task.md

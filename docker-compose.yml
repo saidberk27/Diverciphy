@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # --- Master Services ---
+  master-shredder:
+    build: .
+    environment:
+      - ROLE=MASTER_SHREDDER
+      - SHREDDER_ADRESSES=["http://worker-0:5000", "http://worker-1:5000", "http://worker-2:5000"]
+      - MASTER_ASSEMBLER_URL=http://master-assembler:5556
+      - JWT_SECRET_KEY=dev_secret
+    ports:
+      - "5555:5555"
+    depends_on:
+      - master-assembler
+      - worker-0
+
+  master-assembler:
+    build: .
+    environment:
+      - ROLE=MASTER_ASSEMBLER
+      - ASSEMBLER_ADRESSES=["http://worker-0:5000", "http://worker-1:5000", "http://worker-2:5000"]
+      - FILE_PASSWORD=supersecret
+    ports:
+      - "5556:5556"
+
+  # --- Workers (Simulating 3 for dev, K8s will scale to 10) ---
+  worker-0:
+    build: .
+    hostname: worker-0
+    environment:
+      - ROLE=WORKER
+      - MASTER_ADDRESS=http://master-shredder:5555
+      - SHREDDER_ADDRESS=http://master-shredder:5555
+
+  worker-1:
+    build: .
+    hostname: worker-1
+    environment:
+      - ROLE=WORKER
+      - MASTER_ADDRESS=http://master-shredder:5555
+      - SHREDDER_ADDRESS=http://master-shredder:5555
+      
+  worker-2:
+    build: .
+    hostname: worker-2
+    environment:
+      - ROLE=WORKER
+      - MASTER_ADDRESS=http://master-shredder:5555
+      - SHREDDER_ADDRESS=http://master-shredder:5555

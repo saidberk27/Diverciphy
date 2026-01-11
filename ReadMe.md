@@ -113,3 +113,30 @@ Diverciphy presents a novel approach to secure data transmission by combining en
 
 ---
 
+## Deployment
+
+### Docker (Local Development)
+
+To run the complete distributed system (Master Shredder, Master Assembler, and  Workers) locally:
+
+```bash
+docker-compose up --build
+```
+
+### Kubernetes (Production)
+
+The system is designed to run on K8s with a StatefulSet for workers to ensure data persistence and stable network identities.
+
+```bash
+# 1. Build Image
+docker build -t diverciphy:latest .
+
+# 2. Apply Manifests
+kubectl apply -f k8s/config_secret.yaml
+kubectl apply -f k8s/services.yaml
+kubectl apply -f k8s/deployments.yaml
+kubectl apply -f k8s/statefulset.yaml
+```
+
+---
+

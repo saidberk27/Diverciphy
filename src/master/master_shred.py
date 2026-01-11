@@ -6,11 +6,20 @@ from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 import base64
 # Import Logic Layer
+# Import Logic Layer
 from src.core.shred import Shred
+
+# Import Blueprints
+from src.endpoints.auth.auth_endpoints import auth_bp
+from src.endpoints.analytics.analytics_endpoints import analytics_bp
+from src.endpoints.nodes.nodes_endpoints import nodes_bp
 
 class MasterShredEndpoint:
     def __init__(self, app: Flask):
         self.app = app
+        # Attach self as node manager for blueprints
+        self.app.node_manager = self
+        
         load_dotenv()
         
         self.worker_addresses = json.loads(os.getenv("SHREDDER_ADRESSES", '[]'))
@@ -21,6 +30,18 @@ class MasterShredEndpoint:
         
         self._register_routes()
         print(f"[Master Shredder] Initialized. Target Workers: {len(self.worker_addresses)}")
+
+    def _register_routes(self):
+        # Register core logic
+        self.app.add_url_rule('/auto', view_func=self.auto_process, methods=['POST'])
+        self.app.add_url_rule('/check_workers', view_func=self.check_worker_health, methods=['GET'])
+        self.app.add_url_rule('/health', view_func=lambda: jsonify({"status": "Shredder Healthy"}), methods=['GET'])
+        
+        # Register Blueprints
+        self.app.register_blueprint(auth_bp)
+        self.app.register_blueprint(analytics_bp)
+        self.app.register_blueprint(nodes_bp)
+
 
     def check_worker_health(self):
         """Checks if target worker nodes are reachable."""
@@ -125,16 +146,15 @@ class MasterShredEndpoint:
             "metadata_hex": encrypted_metadata.hex()
         }), 200
 
-    def _register_routes(self):
-        self.app.add_url_rule('/auto', view_func=self.auto_process, methods=['POST'])
-        self.app.add_url_rule('/check_workers', view_func=self.check_worker_health, methods=['GET'])
-        self.app.add_url_rule('/health', view_func=lambda: jsonify({"status": "Shredder Healthy"}), methods=['GET'])
+
 
     def run(self, debug=True, port=6000):
         print("[Master Shredder] Running...")
         self.app.run(host='0.0.0.0', debug=debug, port=port)
 
+
+app = Flask(__name__)
+
 if __name__ == '__main__':
-    app = Flask(__name__)
     shredder_node = MasterShredEndpoint(app)
     shredder_node.run(port=5555)

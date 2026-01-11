@@ -1,0 +1,43 @@
+# --- Service for Master Shredder ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: master-shredder
+spec:
+  selector:
+    app: master-shredder
+  ports:
+    - protocol: TCP
+      port: 5555
+      targetPort: 5555
+  type: ClusterIP
+
+---
+# --- Service for Master Assembler ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: master-assembler
+spec:
+  selector:
+    app: master-assembler
+  ports:
+    - protocol: TCP
+      port: 5556
+      targetPort: 5556
+  type: ClusterIP
+
+---
+# --- Headless Service for Workers (StatefulSet) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: d-svc # Matches serviceName in StatefulSet
+spec:
+  clusterIP: None # Headless
+  selector:
+    app: worker
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000

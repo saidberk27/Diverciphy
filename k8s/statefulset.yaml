@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: worker
+spec:
+  serviceName: "d-svc" # Headless Service for DNS resolution (worker-0.d-svc)
+  replicas: 10
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: diverciphy:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ROLE
+              value: "WORKER"
+            - name: PORT
+              value: "5000"
+          envFrom:
+            - configMapRef:
+                name: diverciphy-config
+            - secretRef:
+                name: diverciphy-secret
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: worker-storage
+              mountPath: /app/data # Store shreds persistently
+  volumeClaimTemplates:
+    - metadata:
+        name: worker-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
